@@ -1,0 +1,99 @@
+name: Snapshot deployed art assets
+
+on:
+  push:
+    paths:
+      - '.github/workflows/snapshot-art-assets.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  snapshot:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Download current deployed artwork
+        shell: bash
+        run: |
+          set -euo pipefail
+          base="https://art.annarae.workers.dev"
+          files=(
+            "art/chicago-water-tower.jpg"
+            "art/commission-cottage.webp"
+            "art/studio-winchester.webp"
+            "art/commission-guide-02.webp"
+            "art/studio-night-photograph.jpg"
+            "art/studio-dog-portrait.jpg"
+            "art/chicago-wrigley-field.webp"
+            "art/cta-pink-line.webp"
+            "art/studio-alley-night.webp"
+            "art/cta-blue-line.webp"
+            "art/studio-house-of-rooms-two.jpg"
+            "art/press-voyage-chicago.jpg"
+            "art/chicago-carbide-carbon.webp"
+            "art/commission-brownstone.webp"
+            "art/cta-green-line.webp"
+            "art/studio-chicago-illustration.jpg"
+            "art/studio-love-thy-self-window.jpg"
+            "art/commission-wedding.webp"
+            "art/studio-utopy.jpg"
+            "art/cta-purple-line.webp"
+            "art/studio-armored-train-photograph.jpg"
+            "art/press-spudnik.jpg"
+            "art/chicago-marina-city.webp"
+            "art/commission-neighborhood-home.webp"
+            "art/commission-red-roof-home.webp"
+            "art/raising-resilient-jewish-children.jpg"
+            "art/studio-resting-cats.jpg"
+            "art/commission-yellow-home.webp"
+            "art/commission-patio-cat.webp"
+            "art/studio-charcoal-portrait.jpg"
+            "art/studio-roses.jpg"
+            "art/commission-holding-hands.webp"
+            "art/commission-climber-portrait.webp"
+            "art/studio-lynch-factory.webp"
+            "art/studio-alleys-at-night.webp"
+            "art/commission-red-brick-home.webp"
+            "art/commission-green-home.webp"
+            "art/studio-tennessee-williams.webp"
+            "art/studio-snow-day.webp"
+            "art/commission-figurative-portrait.webp"
+            "art/studio-house-of-rooms-one.jpg"
+            "art/commission-white-home.webp"
+            "art/studio-watercolor-portrait.jpg"
+            "art/studio-botanical-window.jpg"
+            "art/commission-guide-04.webp"
+            "art/cta-brown-line.webp"
+            "art/commission-guide-01.webp"
+            "art/chicago-lake-street.webp"
+            "art/commission-guide-05.webp"
+            "art/commission-couple-and-dog.webp"
+            "art/commission-guide-03.webp"
+            "art/cta-red-line.webp"
+            "art/commission-climber.webp"
+            "art/studio-congress-hotel.webp"
+            "art/chicago-lincoln-park-conservatory.webp"
+          )
+          mkdir -p art
+          for file in "${files[@]}"; do
+            echo "Downloading $file"
+            curl --fail --location --retry 3 --silent --show-error "$base/$file" --output "$file"
+          done
+
+      - name: Commit snapshot
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add art
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "Snapshot deployed artwork assets"
+            git push
+          fi
