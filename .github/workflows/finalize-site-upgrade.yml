@@ -1,0 +1,70 @@
+name: Finalize site upgrade shell
+
+on:
+  push:
+    branches:
+      - site-upgrade
+    paths:
+      - '.github/workflows/finalize-site-upgrade.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  finalize:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out site-upgrade
+        uses: actions/checkout@v4
+        with:
+          ref: site-upgrade
+
+      - name: Bake design into compiled CSS and sync metadata payloads
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          old_title_plain = 'Anna Rae Art | Chicago Artist & Writer'
+          new_title_plain = 'Anna Rae Art | Chicago Artist, Writer & Illustrator'
+          old_title_escaped = 'Anna Rae Art | Chicago Artist \\u0026 Writer'
+          new_title_escaped = 'Anna Rae Art | Chicago Artist, Writer \\u0026 Illustrator'
+          old_desc = 'The art, writing, prints, and commissions of Chicagoland artist Anna Rae Gilbert.'
+          new_desc = 'Chicago artist, writer, illustrator, and educator Anna Rae Gilbert creates watercolor city prints, architectural art, custom portraits, and Jewish cultural writing.'
+          old_identity = 'Artist · Writer · Educator · Chicago'
+          new_identity = 'Artist · Writer · Illustrator · Educator · Chicago'
+
+          for filename in ('index.html', 'index.rsc'):
+              p = Path(filename)
+              if not p.exists():
+                  continue
+              text = p.read_text(encoding='utf-8')
+              text = text.replace(old_title_plain, new_title_plain)
+              text = text.replace(old_title_escaped, new_title_escaped)
+              text = text.replace(old_desc, new_desc)
+              text = text.replace(old_identity, new_identity)
+              p.write_text(text, encoding='utf-8')
+
+          compiled = Path('assets/index-BGWvft-L.css')
+          upgrade = Path('assets/site-upgrade.css')
+          marker = '/* Anna Rae Art dark editorial upgrade */'
+          if compiled.exists() and upgrade.exists():
+              base = compiled.read_text(encoding='utf-8')
+              if marker not in base:
+                  base += '\n' + marker + '\n' + upgrade.read_text(encoding='utf-8') + '\n'
+                  compiled.write_text(base, encoding='utf-8')
+          PY
+
+      - name: Commit finalized upgrade shell
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html index.rsc assets/index-BGWvft-L.css
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "Finalize dark editorial redesign shell"
+            git push origin HEAD:site-upgrade
+          fi
