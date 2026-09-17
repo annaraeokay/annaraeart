@@ -1,0 +1,90 @@
+name: Apply site upgrade shell
+
+on:
+  push:
+    branches:
+      - site-upgrade
+    paths:
+      - '.github/workflows/apply-site-upgrade.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out site-upgrade
+        uses: actions/checkout@v4
+        with:
+          ref: site-upgrade
+
+      - name: Add dark design layer and SEO metadata
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path('index.html')
+          html = path.read_text(encoding='utf-8')
+
+          # Visual design layer
+          css_link = '<link rel="stylesheet" href="/assets/site-upgrade.css"/>'
+          if css_link not in html:
+              html = html.replace('</head>', css_link + '\n</head>', 1)
+
+          # Identity line: preserve Writer and add Illustrator.
+          html = html.replace(
+              'Artist · Writer · Educator · Chicago',
+              'Artist · Writer · Illustrator · Educator · Chicago'
+          )
+
+          # More search-useful primary metadata in the static document.
+          html = html.replace(
+              '<title>Anna Rae Art | Chicago Artist &amp; Writer</title>',
+              '<title>Anna Rae Art | Chicago Artist, Writer &amp; Illustrator</title>',
+              1
+          )
+          html = html.replace(
+              '<meta name="description" content="The art, writing, prints, and commissions of Chicagoland artist Anna Rae Gilbert."/>',
+              '<meta name="description" content="Chicago artist, writer, illustrator, and educator Anna Rae Gilbert creates watercolor city prints, architectural art, custom portraits, and Jewish cultural writing."/>',
+              1
+          )
+
+          marker = '<link rel="shortcut icon" href="/favicon.svg"/>'
+          seo = '''<link rel="canonical" href="https://art.annarae.workers.dev/"/>
+          <meta name="author" content="Anna Rae Gilbert"/>
+          <meta name="robots" content="index,follow,max-image-preview:large"/>
+          <meta name="theme-color" content="#0d0d0c"/>
+          <meta property="og:type" content="website"/>
+          <meta property="og:site_name" content="Anna Rae Art"/>
+          <meta property="og:title" content="Anna Rae Art | Chicago Artist, Writer &amp; Illustrator"/>
+          <meta property="og:description" content="Watercolor city prints, architectural art, commissions, illustration, and writing by Chicago artist Anna Rae Gilbert."/>
+          <meta property="og:url" content="https://art.annarae.workers.dev/"/>
+          <meta property="og:image" content="https://art.annarae.workers.dev/art/chicago-water-tower.jpg"/>
+          <meta property="og:image:alt" content="Colorful illustration of the historic Chicago Water Tower by Anna Rae Gilbert."/>
+          <meta name="twitter:card" content="summary_large_image"/>
+          <meta name="twitter:title" content="Anna Rae Art | Chicago Artist, Writer &amp; Illustrator"/>
+          <meta name="twitter:description" content="Watercolor city prints, architectural art, commissions, illustration, and writing by Chicago artist Anna Rae Gilbert."/>
+          <meta name="twitter:image" content="https://art.annarae.workers.dev/art/chicago-water-tower.jpg"/>
+          <script type="application/ld+json">{"@context":"https://schema.org","@type":"Person","name":"Anna Rae Gilbert","url":"https://art.annarae.workers.dev/","jobTitle":["Artist","Writer","Illustrator","Educator"],"sameAs":["https://www.etsy.com/shop/alchemyopolis","https://www.instagram.com/annaraeokay/","https://www.facebook.com/annaraeokay/","https://x.com/annaraegilbert"]}</script>
+          '''
+          if '<link rel="canonical" href="https://art.annarae.workers.dev/"/>' not in html:
+              html = html.replace(marker, seo + marker, 1)
+
+          path.write_text(html, encoding='utf-8')
+          PY
+
+      - name: Commit upgrade shell
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "Apply dark editorial design and SEO shell"
+            git push origin HEAD:site-upgrade
+          fi
