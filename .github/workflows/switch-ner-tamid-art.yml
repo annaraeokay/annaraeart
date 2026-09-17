@@ -1,0 +1,34 @@
+name: Switch final Ner Tamid artwork
+on:
+  push:
+    branches: [site-upgrade]
+    paths:
+      - '.github/workflows/switch-ner-tamid-art.yml'
+permissions:
+  contents: write
+jobs:
+  switch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: site-upgrade
+      - name: Switch overlay asset
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          for name in ('index.html','preview.html'):
+              p=Path(name)
+              s=p.read_text()
+              s=s.replace('assets/live-layer-0215.js','assets/live-layer-0239.js')
+              s=s.replace('assets/live-layer-6e2c839.js','assets/live-layer-0239.js')
+              p.write_text(s)
+          PY
+          rm -f .github/workflows/switch-ner-tamid-art.yml
+      - name: Commit final integration
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html preview.html .github/workflows/switch-ner-tamid-art.yml
+          git commit -m 'Show final Ner Tamid artwork in site and preview'
+          git push origin site-upgrade
