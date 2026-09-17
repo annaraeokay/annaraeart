@@ -25,6 +25,7 @@ jobs:
         run: |
           python - <<'PY'
           from pathlib import Path
+          import re
 
           old_title_plain = 'Anna Rae Art | Chicago Artist & Writer'
           new_title_plain = 'Anna Rae Art | Chicago Artist, Writer & Illustrator'
@@ -34,6 +35,8 @@ jobs:
           new_desc = 'Chicago artist, writer, illustrator, and educator Anna Rae Gilbert creates watercolor city prints, architectural art, custom portraits, and Jewish cultural writing.'
           old_identity = 'Artist · Writer · Educator · Chicago'
           new_identity = 'Artist · Writer · Illustrator · Educator · Chicago'
+          old_css = '/assets/index-BGWvft-L.css'
+          real_css = '/assets/index-EKRdpO1a.css'
 
           for filename in ('index.html', 'index.rsc'):
               p = Path(filename)
@@ -44,9 +47,23 @@ jobs:
               text = text.replace(old_title_escaped, new_title_escaped)
               text = text.replace(old_desc, new_desc)
               text = text.replace(old_identity, new_identity)
+              text = text.replace(old_css, real_css)
+
+              # Only the first hero image needs an eager preload. The rest can load normally.
+              if filename == 'index.html':
+                  preloads = re.findall(r'<link rel="preload" as="image" href="[^"]+"/>', text)
+                  if len(preloads) > 1:
+                      for tag in preloads[1:]:
+                          text = text.replace(tag, '', 1)
+                  text = text.replace(
+                      '<img src="/art/cta-blue-line.webp" alt="Full painting of a Chicago Blue Line train arriving at Damen station beneath a turquoise sky."/>',
+                      '<img src="/art/cta-blue-line.webp" alt="Full painting of a Chicago Blue Line train arriving at Damen station beneath a turquoise sky." fetchpriority="high" decoding="async"/>',
+                      1
+                  )
+
               p.write_text(text, encoding='utf-8')
 
-          compiled = Path('assets/index-BGWvft-L.css')
+          compiled = Path('assets/index-EKRdpO1a.css')
           upgrade = Path('assets/site-upgrade.css')
           marker = '/* Anna Rae Art dark editorial upgrade */'
           if compiled.exists() and upgrade.exists():
@@ -61,7 +78,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add index.html index.rsc assets/index-BGWvft-L.css
+          git add index.html index.rsc assets/index-EKRdpO1a.css
           if git diff --cached --quiet; then
             echo "No changes to commit"
           else
