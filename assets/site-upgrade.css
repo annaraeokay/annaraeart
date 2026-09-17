@@ -270,6 +270,7 @@ footer,
 .featured-rotation {
   min-width: 0;
   border: 0 !important;
+  overflow-anchor: none;
 }
 
 .rotation-stage {
@@ -294,6 +295,7 @@ footer,
 }
 
 .rotation-chrome {
+  min-height: 96px;
   padding: 18px 0 0 !important;
   display: flex;
   align-items: flex-end;
@@ -987,6 +989,7 @@ button:focus-visible {
   }
 
   .rotation-chrome {
+    min-height: 168px;
     align-items: flex-start;
     flex-direction: column;
   }

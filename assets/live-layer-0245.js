@@ -34,9 +34,9 @@
 
   function addParshaNav() {
     const nav = document.querySelector('header nav, .site-nav, nav');
-    if (!nav || nav.querySelector('a[href="parsha.html"]')) return;
+    if (!nav || nav.querySelector('a[href="/parsha"]')) return;
     const a = document.createElement('a');
-    a.href = 'parsha.html'; a.textContent = 'Parsha';
+    a.href = '/parsha'; a.textContent = 'Parsha';
     const shop = [...nav.querySelectorAll('a')].find(el => /shop/i.test(el.textContent || ''));
     if (shop) nav.insertBefore(a, shop); else nav.appendChild(a);
   }
@@ -51,7 +51,7 @@
     section.setAttribute('aria-label', 'Ner Tamid');
     section.innerHTML = `
       <div class="anna-ner-visual">
-        <img class="anna-ner-image" src="${ASSET_ROOT}/art/ner-tamid-eternal-light.webp" alt="Ner Tamid eternal light with glowing embers and Hebrew lettering" loading="lazy" />
+        <img class="anna-ner-image" src="${ASSET_ROOT}/art/ner-tamid-app-preview.jpg" alt="Ner Tamid eternal light artwork" loading="lazy" />
         <div class="anna-ner-meta">
           <p class="anna-ner-kicker">Live digital project · Jewish time and learning</p>
           <a class="anna-ner-link" href="https://nertamid.grok.me" target="_blank" rel="noreferrer">Open Ner Tamid ↗</a>
@@ -65,7 +65,7 @@
     if (document.getElementById(LAYER_ID)) return;
     const section = document.createElement('section'); section.id = LAYER_ID; section.setAttribute('aria-label', 'Today and this week');
     const date = new Intl.DateTimeFormat('en-US',{weekday:'long',month:'long',day:'numeric',timeZone:'America/Chicago'}).format(new Date());
-    section.innerHTML = `<div><p class="live-kicker">Today</p><p class="live-date">${date}</p></div><div><p class="live-kicker">Live</p><a href="https://nertamid.grok.me" target="_blank" rel="noreferrer">Ner Tamid</a><p class="live-note">Jewish time, learning and the eternal light.</p></div><div><p class="live-kicker">This week</p><a href="parsha.html">Ha’azinu · Shabbat Shuvah</a><p class="live-note">Weekly Torah graphic and reflection.</p></div>`;
+    section.innerHTML = `<div><p class="live-kicker">Today</p><p class="live-date">${date}</p></div><div><p class="live-kicker">Live</p><a href="https://nertamid.grok.me" target="_blank" rel="noreferrer">Ner Tamid</a><p class="live-note">Jewish time, learning and the eternal light.</p></div><div><p class="live-kicker">This week</p><a href="/parsha">Ha’azinu · Shabbat Shuvah</a><p class="live-note">Weekly Torah graphic and reflection.</p></div>`;
     const hero=document.querySelector('.hero, [class*="hero"]'), main=document.querySelector('main');
     if(hero&&hero.parentNode) hero.insertAdjacentElement('afterend',section); else if(main) main.insertBefore(section,main.firstElementChild?.nextSibling||null); else document.body.insertBefore(section,document.body.firstChild);
   }
