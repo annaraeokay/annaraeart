@@ -1,0 +1,47 @@
+name: Refresh Ner Tamid treatment
+
+on:
+  push:
+    branches:
+      - site-upgrade
+    paths:
+      - '.github/workflows/rehash-ner-tamid.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  refresh:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out site-upgrade
+        uses: actions/checkout@v4
+        with:
+          ref: site-upgrade
+
+      - name: Rehash live layer and update page references
+        shell: bash
+        run: |
+          cp assets/live-layer.js assets/live-layer-6e2c839.js
+          python - <<'PY'
+          from pathlib import Path
+          for filename in ('index.html', 'preview.html'):
+              p = Path(filename)
+              if not p.exists():
+                  continue
+              text = p.read_text(encoding='utf-8')
+              text = text.replace('assets/live-layer.js', 'assets/live-layer-6e2c839.js')
+              p.write_text(text, encoding='utf-8')
+          PY
+          git rm assets/live-layer.js
+          git rm .github/workflows/rehash-ner-tamid.yml
+
+      - name: Commit refreshed treatment
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html preview.html assets/live-layer-6e2c839.js
+          git commit -m "Polish Ner Tamid into minimal editorial section"
+          git push origin HEAD:site-upgrade
