@@ -1,0 +1,58 @@
+name: Build branch preview
+
+on:
+  push:
+    branches:
+      - site-upgrade
+    paths:
+      - '.github/workflows/build-branch-preview.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  preview:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out site-upgrade
+        uses: actions/checkout@v4
+        with:
+          ref: site-upgrade
+
+      - name: Build browser-safe preview
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          source = Path('index.html').read_text(encoding='utf-8')
+          base = 'https://raw.githack.com/annaraeokay/annaraeart/site-upgrade/'
+
+          # Keep the preview out of search indexes.
+          source = source.replace('<head>', '<head><meta name="robots" content="noindex,nofollow"/>', 1)
+
+          # Rewrite root-relative site resources so the branch renders from a CDN preview host.
+          for old, new in [
+              ('/assets/', base + 'assets/'),
+              ('/art/', base + 'art/'),
+              ('/favicon.svg', base + 'favicon.svg'),
+              ('href="/parsha.html"', 'href="' + base + 'parsha.html"'),
+          ]:
+              source = source.replace(old, new)
+
+          Path('preview.html').write_text(source, encoding='utf-8')
+          PY
+
+      - name: Commit preview page
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add preview.html
+          if git diff --cached --quiet; then
+            echo "No preview changes"
+          else
+            git commit -m "Build browser preview for site-upgrade"
+            git push origin HEAD:site-upgrade
+          fi
