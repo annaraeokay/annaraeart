@@ -1,0 +1,57 @@
+name: Snapshot deployed site files
+
+on:
+  push:
+    paths:
+      - '.github/workflows/snapshot-site-files.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  snapshot:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Download current deployed site files
+        shell: bash
+        run: |
+          set -euo pipefail
+          base="https://art.annarae.workers.dev"
+          files=(
+            "index.html"
+            "index.rsc"
+            "favicon.svg"
+            "file.svg"
+            "globe.svg"
+            "window.svg"
+            "assets/framework-CXnKph_e.js"
+            "assets/index-EKRdpO1a.css"
+            "assets/index-DhG-xVKT.js"
+            "assets/ArtLightbox-8wZ09dMk.js"
+            "assets/layout-segment-context-C0H_X19b.js"
+            "assets/FeaturedRotation-BldYU62I.js"
+            "assets/rolldown-runtime-S-ySWqyJ.js"
+          )
+          mkdir -p assets
+          for file in "${files[@]}"; do
+            echo "Downloading $file"
+            curl --fail --location --retry 3 --silent --show-error "$base/$file" --output "$file"
+          done
+
+      - name: Commit snapshot
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html index.rsc favicon.svg file.svg globe.svg window.svg assets
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "Snapshot deployed site files"
+            git push
+          fi
