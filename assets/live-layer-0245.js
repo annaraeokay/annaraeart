@@ -51,7 +51,7 @@
     section.setAttribute('aria-label', 'Ner Tamid');
     section.innerHTML = `
       <div class="anna-ner-visual">
-        <img class="anna-ner-image" src="${ASSET_ROOT}/art/ner-tamid-app-preview.jpg" alt="Ner Tamid eternal light artwork" loading="lazy" />
+        <img class="anna-ner-image" src="${ASSET_ROOT}/art/ner-tamid-eternal-light.png" alt="Glowing Ner Tamid eternal light with embers and Hebrew lettering" loading="lazy" />
         <div class="anna-ner-meta">
           <p class="anna-ner-kicker">Live digital project · Jewish time and learning</p>
           <a class="anna-ner-link" href="https://nertamid.grok.me" target="_blank" rel="noreferrer">Open Ner Tamid ↗</a>
